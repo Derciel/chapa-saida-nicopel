@@ -80,8 +80,7 @@ def buscar_dados_os(numero_os):
             else:
                 st.error(f"OS {numero_os} não encontrada na planilha!")
                 return None
-
-        
+                
 def gerar_qrcode(numero_os):
     try:
         
