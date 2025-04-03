@@ -142,6 +142,7 @@ def pagina_confirmacao(numero_os):
             if st.form_submit_button("Confirmar Saída"):
                 aba = acessar_planilha()
                 if aba:
+                    datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                     aba.update_cell(dados['linha'], COLUNAS.index("STATUS") + 1, "SAIDA")
                     aba.update_cell(dados['linha'], COLUNAS.index("CONFIRMADOR") + 1, nome_confirmador)
                     aba.update_cell(dados['linha'], COLUNAS.index("DATA") + 1, datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
