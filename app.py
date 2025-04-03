@@ -33,26 +33,32 @@ def acessar_planilha():
         aba = planilha.sheet1  # Acessa a primeira aba da planilha
         return aba
     except SpreadsheetNotFound:
-        st.error("Planilha não encontrada!")
+        st.error("Planilha não encontrada! Verifique o ID da planilha.")
         return None
     except APIError as e:
-        st.error(f"Erro ao acessar a planilha: {e}")
+        st.error(f"Erro ao acessar a planilha: {str(e)}")
         return None
 
 def buscar_dados_os(numero_os):
     try:
         aba = acessar_planilha()
         if not aba:
+            st.error("Não foi possível acessar a planilha.")
             return None
         
         # Busca todas as linhas da planilha
         dados = aba.get_all_values()
-        if not dados or len(dados) < 2:  # Verifica se há dados além do cabeçalho
+        if not dados or len(dados) < 2:
+            st.error("A planilha está vazia ou não tem dados além do cabeçalho.")
             return None
+        
+        # Normaliza o número da OS para evitar problemas de formatação
+        numero_os = str(numero_os).strip()
         
         # Encontra a linha correspondente ao número da OS
         for i, linha in enumerate(dados[1:], start=2):  # Começa da linha 2 (após cabeçalho)
-            if linha[COLUNAS.index("OS")] == numero_os:
+            os_planilha = str(linha[COLUNAS.index("OS")]).strip()
+            if os_planilha == numero_os:
                 return {
                     "linha": i,
                     "NOME": linha[COLUNAS.index("NOME")],
@@ -72,6 +78,7 @@ def buscar_dados_os(numero_os):
                     "TIPO DE IMP.": linha[COLUNAS.index("TIPO DE IMP.")],
                     "CONFIRMADOR": linha[COLUNAS.index("CONFIRMADOR")]
                 }
+        st.error(f"OS '{numero_os}' não encontrada na planilha. Verifique se o número está correto.")
         return None
     except Exception as e:
         st.error(f"Erro ao buscar dados: {str(e)}")
@@ -87,6 +94,7 @@ def gerar_qrcode(numero_os):
     buffer = io.BytesIO()
     img.save(buffer, format="PNG")
     return buffer.getvalue()
+
 def pagina_principal():
     st.title("🔍 Consulta de Ordem de Serviço")
     numero_os = st.text_input("Digite o número da OS")
@@ -105,41 +113,40 @@ def pagina_principal():
         qr_image = gerar_qrcode(qr_numero)
         st.image(qr_image, caption=f"QR Code para OS {qr_numero}")
 
-def pagina_principal():
-    st.title("📤 Sistema de Registro de Saída de Chapas")
-    
-    numero_os = st.text_input("🔢 Número da OS", key="os_input")
-    
-    if st.button("Gerar QR Code", key="gerar_btn"):
-        if numero_os:
-            with st.spinner("Processando..."):
-                dados = buscar_dados_os(numero_os)
-                if dados:
-                    if dados.get("STATUS") == "SAIDA":
-                        st.warning(f"⚠️ OS {numero_os} já teve saída em {dados['DATA']}")
-                    else:
-                        qr_bytes = gerar_qrcode(numero_os)
-                        if qr_bytes:
-                            st.session_state.qr_data = {
-                                'bytes': qr_bytes,
-                                'nome_arquivo': f"OS_{numero_os}_{dados['NOME'].replace(' ', '_')}.png"
-                            }
-                else:
-                    st.session_state.qr_data = None
-        else:
-            st.warning("Digite o número da OS primeiro!")
+def pagina_confirmacao(numero_os):
+    try:
+        dados = buscar_dados_os(numero_os)
+        if not dados:
+            return
 
-    if 'qr_data' in st.session_state and st.session_state.qr_data:
-        col1, col2 = st.columns(2)
-        with col1:
-            st.image(st.session_state.qr_data['bytes'], caption="QR Code para Confirmação")
-        with col2:
-            st.download_button(
-                label="⬇️ Baixar QR Code",
-                data=st.session_state.qr_data['bytes'],
-                file_name=st.session_state.qr_data['nome_arquivo'],
-                mime="image/png"
-            )
+        st.title(f"✅ Confirmação de Saída - OS {numero_os}")
+        st.write(f"**Produto:** {dados['NOME']}")
+        
+        with st.form(key='confirmar_saida'):
+            nome_confirmador = st.text_input("👤 Seu nome para confirmação")
+            
+            if st.form_submit_button("Confirmar Saída"):
+                aba = acessar_planilha()
+                if aba:
+                    updates = [
+                        (COLUNAS.index("STATUS") + 1, "SAIDA"),
+                        (COLUNAS.index("CONFIRMADOR") + 1, nome_confirmador),
+                        (COLUNAS.index("DATA") + 1, datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                    ]
+                    
+                    for col, value in updates:
+                        aba.update_cell(dados['linha'], col, value)
+                    
+                    st.success("Saída confirmada com sucesso!")
+                    st.balloons()
+                    st.query_params.clear()
+                    st.rerun()
+                else:
+                    st.error("Falha na conexão com a planilha!")
+    except APIError as e:
+        st.error(f"Erro na API: {e.response.json().get('error', {}).get('message', 'Erro desconhecido')}")
+    except Exception as e:
+        st.error(f"Erro na confirmação: {str(e)}")
 
 def pagina_detalhes(numero_os):
     try:
