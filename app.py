@@ -11,7 +11,7 @@ from gspread.exceptions import APIError, SpreadsheetNotFound
 # Configurações do Google Sheets
 ESCOPO = ['https://spreadsheets.google.com/feeds',
           'https://www.googleapis.com/auth/drive']
-CREDENCIAIS = ServiceAccountCredentials.from_json_keyfile_name('credenciais.json', ESCOPO)
+credenciais = ServiceAccountCredentials.from_json_keyfile_dict(st.secrets["gcp_service_account"], ESCOPO)
 CLIENTE = gspread.authorize(CREDENCIAIS)
 ID_PLANILHA = '1Zye1EfKONPvGOFd-wYYy7w8UxWi4S0MPmG-2zLWR9WI'
 
