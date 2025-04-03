@@ -98,6 +98,38 @@ def gerar_qrcode(numero_os):
         return None
 
 # ... (mantenha as funções pagina_principal, pagina_confirmacao e pagina_detalhes)
+def pagina_principal():
+    st.title("📤 Sistema de Registro de Saída")
+    
+    numero_os = st.text_input("🔢 Número da OS", key="os_input")
+    
+    if st.button("Gerar QR Code", key="gerar_btn"):
+        if numero_os:
+            with st.spinner("Processando..."):
+                dados = buscar_dados_os(numero_os)
+                if dados:
+                    qr_bytes = gerar_qrcode(numero_os)
+                    if qr_bytes:
+                        st.session_state.qr_data = {
+                            'bytes': qr_bytes,
+                            'nome_arquivo': f"OS_{numero_os}_{dados['NOME'].replace(' ', '_')}.png"
+                        }
+                else:
+                    st.session_state.qr_data = None
+        else:
+            st.warning("Digite o número da OS primeiro!")
+
+    if 'qr_data' in st.session_state and st.session_state.qr_data:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.image(st.session_state.qr_data['bytes'], caption="QR Code para Confirmação")
+        with col2:
+            st.download_button(
+                label="⬇️ Baixar QR Code",
+                data=st.session_state.qr_data['bytes'],
+                file_name=st.session_state.qr_data['nome_arquivo'],
+                mime="image/png"
+            )
 
 def pagina_confirmacao(numero_os):
     try:
@@ -133,10 +165,49 @@ def pagina_confirmacao(numero_os):
         st.error(f"Erro na API: {e.response.json().get('error', {}).get('message', 'Erro desconhecido')}")
     except Exception as e:
         st.error(f"Erro na confirmação: {str(e)}")
+    
+def pagina_detalhes(numero_os):
+    try:
+        dados = buscar_dados_os(numero_os)
+        if not dados:
+            return
+            
+        st.title(f"📋 Detalhes da OS {numero_os}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Informações Principais")
+            st.metric("Produto", dados['NOME'])
+            st.metric("Status", dados['STATUS'])
+            st.metric("Data", dados['DATA'])
+            st.metric("Confirmado por", dados['CONFIRMADOR'])
+        
+        with col2:
+            st.subheader("Detalhes Técnicos")
+            st.metric("Impressora", dados['IMPRESSORA'])
+            st.metric("Modelo", dados['MODELO'])
+            st.metric("Qtd. Chapas", dados['QTD. CHAPA'])
+            st.metric("Tipo de Impressão", dados['TIPO DE IMP.'])
+        
+        st.subheader("Especificações de Cor")
+        cols = st.columns(4)
+        cols[0].metric("C", dados['C'])
+        cols[1].metric("M", dados['M'])
+        cols[2].metric("Y", dados['Y'])
+        cols[3].metric("K", dados['K'])
+        
+        st.subheader("Dados Complementares")
+        st.write(f"**CTP:** {dados['CTP']}")
+        st.write(f"**Valor:** R$ {dados['VALOR']}")
+        st.write(f"**P:** {dados['P']}")
+    except Exception as e:
+        st.error(f"Erro ao carregar detalhes: {str(e)}")
 
 # Controle de navegação principal
-if "os" in st.query_params:
-    numero_os = unquote(st.query_params.get("os", ""))
+query_params = st.experimental_get_query_params()
+if "os" in query_params:
+    numero_os = unquote(query_params["os"][0])
     if numero_os:
         dados = buscar_dados_os(numero_os)
         if dados:
