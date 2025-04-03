@@ -145,7 +145,7 @@ def pagina_confirmacao(numero_os):
                     datetime.now().strftime("%d/%m/%Y")
                     aba.update_cell(dados['linha'], COLUNAS.index("STATUS") + 1, "SAIDA")
                     aba.update_cell(dados['linha'], COLUNAS.index("CONFIRMADOR") + 1, nome_confirmador)
-                    aba.update_cell(dados['linha'], COLUNAS.index("DATA DA CONFIRMAÇÃO") + 1, datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                    aba.update_cell(dados['linha'], COLUNAS.index("DATA_DA_CONFIRMAÇÃO") + 1, datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
                     st.success("Saída confirmada com sucesso!")
                     st.balloons()
                 else:
@@ -167,7 +167,7 @@ def pagina_detalhes(numero_os):
             st.subheader("Informações Principais")
             st.metric("Produto", dados['NOME'])
             st.metric("Status", dados['STATUS'])
-            st.metric("Data de Confirmação", dados['DATA'])
+            st.metric("Data de Confirmação", dados['DATA_DA_CONFIRMAÇÃO'])
             st.metric("Confirmado por", dados['CONFIRMADOR'])
         
         with col2:
