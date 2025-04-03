@@ -134,10 +134,9 @@ def pagina_confirmacao(numero_os):
     except Exception as e:
         st.error(f"Erro na confirmação: {str(e)}")
 
-# Controle de navegação principal (Atualizado)
-query_params = st.experimental_get_query_params()
-if "os" in query_params:
-    numero_os = unquote(query_params["os"][0])
+# Controle de navegação principal
+if "os" in st.query_params:
+    numero_os = unquote(st.query_params.get("os", ""))
     if numero_os:
         dados = buscar_dados_os(numero_os)
         if dados:
@@ -152,4 +151,8 @@ if "os" in query_params:
 else:
     pagina_principal()
 
-# Removido a limpeza de arquivos temporários (não necessário com BytesIO)
+# Limpeza de arquivos temporários
+if os.path.exists("temp_qrcodes"):
+    for file in os.listdir("temp_qrcodes"):
+        if file.endswith(".png"):
+            os.remove(os.path.join("temp_qrcodes", file))
