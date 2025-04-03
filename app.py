@@ -49,28 +49,38 @@ def buscar_dados_os(numero_os):
         if not aba:
             return None
             
-        # Converter para string e remover espaços
-        numero_os = str(numero_os).strip()
+        # Normalização avançada
+        numero_os = (
+            str(numero_os)
+            .strip()
+            .upper()
+            .replace("OS", "")
+            .replace("#", "")
+            .strip()
+        )
         
-        # Procurar em toda a coluna OS (coluna 3)
-        celula = aba.find(numero_os, in_column=3)
-        
+        # Remover zeros à esquerda se for numérico
+        if numero_os.isdigit():
+            numero_os = str(int(numero_os))
+            
+        # Busca com tolerância
+        celula = None
+        try:
+            celula = aba.find(numero_os, in_column=3)
+        except gspread.exceptions.CellNotFound:
+            pass
+            
         if not celula:
-            st.error(f"OS {numero_os} não encontrada na linha!")
-            return None
+            # Tentar busca parcial
+            todas_oss = aba.col_values(3)
+            matches = [os for os in todas_oss if numero_os in os]
+            
+            if matches:
+                celula = aba.find(matches[0], in_column=3)
+            else:
+                st.error(f"OS {numero_os} não encontrada na planilha!")
+                return None
 
-        valores = aba.row_values(celula.row)
-        
-        # Preencher valores faltantes (CORREÇÃO AQUI)
-        valores += [''] * (len(COLUNAS) - len(valores))  # <--- Parêntese adicionado
-        
-        return {
-            **dict(zip(COLUNAS, valores)),
-            'linha': celula.row
-        }
-    except Exception as e:
-        st.error(f"Erro na busca: {str(e)}")
-        return None
         
 def gerar_qrcode(numero_os):
     try:
