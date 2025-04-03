@@ -24,7 +24,7 @@ ID_PLANILHA = '1Zye1EfKONPvGOFd-wYYy7w8UxWi4S0MPmG-2zLWR9WI'
 
 COLUNAS = [
     "NOME", "STATUS", "OS", "CTP", "IMPRESSORA", "MODELO",
-    "DATA", "VALOR", "QTD. CHAPA", "C", "M", "Y", "K", "P", "TIPO DE IMP.", "CONFIRMADOR"
+    "DATA", "VALOR", "QTD. CHAPA", "C", "M", "Y", "K", "P", "TIPO DE IMP.", "CONFIRMADOR", "DATA DA CONFIRMAÇÃO"
 ]
 
 def acessar_planilha():
