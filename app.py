@@ -106,40 +106,41 @@ def pagina_principal():
         qr_image = gerar_qrcode(qr_numero)
         st.image(qr_image, caption=f"QR Code para OS {qr_numero}")
 
-def pagina_confirmacao(numero_os):
-    try:
-        dados = buscar_dados_os(numero_os)
-        if not dados:
-            return
-
-        st.title(f"✅ Confirmação de Saída - OS {numero_os}")
-        st.write(f"**Produto:** {dados['NOME']}")
-        
-        with st.form(key='confirmar_saida'):
-            nome_confirmador = st.text_input("👤 Seu nome para confirmação")
-            
-            if st.form_submit_button("Confirmar Saída"):
-                aba = acessar_planilha()
-                if aba:
-                    updates = [
-                        (COLUNAS.index("STATUS") + 1, "SAIDA"),
-                        (COLUNAS.index("CONFIRMADOR") + 1, nome_confirmador),
-                        (COLUNAS.index("DATA") + 1, datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
-                    ]
-                    
-                    for col, value in updates:
-                        aba.update_cell(dados['linha'], col, value)
-                    
-                    st.success("Saída confirmada com sucesso!")
-                    st.balloons()
-                    st.query_params.clear()
-                    st.rerun()
+def pagina_principal():
+    st.title("📤 Sistema de Registro de Saída de Chapas")
+    
+    numero_os = st.text_input("🔢 Número da OS", key="os_input")
+    
+    if st.button("Gerar QR Code", key="gerar_btn"):
+        if numero_os:
+            with st.spinner("Processando..."):
+                dados = buscar_dados_os(numero_os)
+                if dados:
+                    if dados.get("STATUS") == "SAIDA":
+                        st.warning(f"⚠️ OS {numero_os} já teve saída em {dados['DATA']}")
+                    else:
+                        qr_bytes = gerar_qrcode(numero_os)
+                        if qr_bytes:
+                            st.session_state.qr_data = {
+                                'bytes': qr_bytes,
+                                'nome_arquivo': f"OS_{numero_os}_{dados['NOME'].replace(' ', '_')}.png"
+                            }
                 else:
-                    st.error("Falha na conexão com a planilha!")
-    except APIError as e:
-        st.error(f"Erro na API: {e.response.json().get('error', {}).get('message', 'Erro desconhecido')}")
-    except Exception as e:
-        st.error(f"Erro na confirmação: {str(e)}")
+                    st.session_state.qr_data = None
+        else:
+            st.warning("Digite o número da OS primeiro!")
+
+    if 'qr_data' in st.session_state and st.session_state.qr_data:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.image(st.session_state.qr_data['bytes'], caption="QR Code para Confirmação")
+        with col2:
+            st.download_button(
+                label="⬇️ Baixar QR Code",
+                data=st.session_state.qr_data['bytes'],
+                file_name=st.session_state.qr_data['nome_arquivo'],
+                mime="image/png"
+            )
 
 def pagina_detalhes(numero_os):
     try:
