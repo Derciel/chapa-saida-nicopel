@@ -49,20 +49,20 @@ def buscar_dados_os(numero_os):
         if not aba:
             return None
             
+        # Converter para string e remover espaços
         numero_os = str(numero_os).strip()
         
-        # Melhoria na busca para lidar com diferentes formatos
-        try:
-            celula = aba.find(str(int(numero_os)), in_column=3)  # Tenta converter para número
-        except ValueError:
-            celula = aba.find(numero_os, in_column=3)
-
+        # Procurar em toda a coluna OS (coluna 3)
+        celula = aba.find(numero_os, in_column=3)
+        
         if not celula:
-            st.error(f"OS {numero_os} não encontrada!")
+            st.error(f"OS {numero_os} não encontrada na linha!")
             return None
 
         valores = aba.row_values(celula.row)
-        valores += [''] * (len(COLUNAS) - len(valores)
+        
+        # Preencher valores faltantes (CORREÇÃO AQUI)
+        valores += [''] * (len(COLUNAS) - len(valores))  # <--- Parêntese adicionado
         
         return {
             **dict(zip(COLUNAS, valores)),
@@ -71,7 +71,7 @@ def buscar_dados_os(numero_os):
     except Exception as e:
         st.error(f"Erro na busca: {str(e)}")
         return None
-
+        
 def gerar_qrcode(numero_os):
     try:
         # URL corrigida para deploy (substitua pelo seu domínio)
