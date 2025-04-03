@@ -111,7 +111,7 @@ def pagina_confirmacao(numero_os):
         dados = buscar_dados_os(numero_os)
         if not dados:
             return
-            
+
         st.title(f"✅ Confirmação de Saída - OS {numero_os}")
         st.write(f"**Produto:** {dados['NOME']}")
         
@@ -129,7 +129,7 @@ def pagina_confirmacao(numero_os):
                     
                     for col, value in updates:
                         aba.update_cell(dados['linha'], col, value)
-                        
+                    
                     st.success("Saída confirmada com sucesso!")
                     st.balloons()
                     st.query_params.clear()
@@ -146,7 +146,7 @@ def pagina_detalhes(numero_os):
         dados = buscar_dados_os(numero_os)
         if not dados:
             return
-            
+
         st.title(f"📋 Detalhes da OS {numero_os}")
         
         col1, col2 = st.columns(2)
