@@ -75,7 +75,7 @@ def buscar_dados_os(numero_os):
 def gerar_qrcode(numero_os):
     try:
         # URL corrigida para deploy (substitua pelo seu domínio)
-        APP_URL = "https://seu-app.streamlit.app/"  # 👈 ALTERAR PARA SUA URL!
+        APP_URL = "https://chapa-saida-nicopel.streamlit.app/"  # 👈 ALTERAR PARA SUA URL!
         params = quote(str(numero_os))
         url = f"{APP_URL}?os={params}"
         
