@@ -78,7 +78,7 @@ def buscar_dados_os(numero_os):
         return None
 
 def gerar_qrcode(numero_os):
-    url = f"{st.get_option('browser.serverAddress')}?os={quote(numero_os)}"
+    url = f"{st.get_option('https://chapa-saida-nicopel.streamlit.app/')}?os={quote(numero_os)}"
     qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(url)
     qr.make(fit=True)
