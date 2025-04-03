@@ -78,15 +78,28 @@ def buscar_dados_os(numero_os):
         return None
 
 def gerar_qrcode(numero_os):
-    url = f"{st.get_option('https://chapa-saida-nicopel.streamlit.app/')}?os={quote(numero_os)}"
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(url)
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill='black', back_color='white')
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    return buffer.getvalue()
+    try:
+        APP_URL = "https://chapa-saida-nicopel.streamlit.app/"
+        params = quote(str(numero_os))
+        url = f"{APP_URL}?os={params}"
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        return img_byte_arr
+    except Exception as e:
+        st.error(f"Erro ao gerar QR Code: {str(e)}")
+        return None)
 
 def pagina_principal():
     st.title("🔍 Consulta de Ordem de Serviço")
