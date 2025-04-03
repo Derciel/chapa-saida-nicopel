@@ -167,7 +167,7 @@ def pagina_detalhes(numero_os):
             st.subheader("Informações Principais")
             st.metric("Produto", dados['NOME'])
             st.metric("Status", dados['STATUS'])
-            st.metric("Data", dados['DATA'])
+            st.metric("Data de Confirmação", dados['DATA'] if dados['DATA'] else "Não confirmada")
             st.metric("Confirmado por", dados['CONFIRMADOR'])
         
         with col2:
@@ -186,8 +186,6 @@ def pagina_detalhes(numero_os):
         
         st.subheader("Dados Complementares")
         st.write(f"**CTP:** {dados['CTP']}")
-        st.write(f"**Valor:** R$ {dados['VALOR']}")
-        st.write(f"**P:** {dados['P']}")
     except Exception as e:
         st.error(f"Erro ao carregar detalhes: {str(e)}")
 
