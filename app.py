@@ -74,7 +74,7 @@ def gerar_qrcode(numero_os):
     try:
         # Codificar parâmetros corretamente
         params = quote(str(numero_os))
-        url = f"http://localhost:8501/?os={params}"
+        url = f"https://chapa-saida-nicopel.streamlit.app/?os={params}"
         
         qr = qrcode.QRCode(
             version=1,
