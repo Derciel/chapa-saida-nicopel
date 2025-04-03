@@ -74,8 +74,8 @@ def buscar_dados_os(numero_os):
         
 def gerar_qrcode(numero_os):
     try:
-        # URL corrigida para deploy (substitua pelo seu domínio)
-        APP_URL = "https://chapa-saida-nicopel.streamlit.app/"  # 👈 ALTERAR PARA SUA URL!
+        
+        APP_URL = "https://chapa-saida-nicopel.streamlit.app/"
         params = quote(str(numero_os))
         url = f"{APP_URL}?os={params}"
         
@@ -99,7 +99,7 @@ def gerar_qrcode(numero_os):
 
 # ... (mantenha as funções pagina_principal, pagina_confirmacao e pagina_detalhes)
 def pagina_principal():
-    st.title("📤 Sistema de Registro de Saída")
+    st.title("📤 Sistema de Registro de Saída de Chapas")
     
     numero_os = st.text_input("🔢 Número da OS", key="os_input")
     
@@ -137,28 +137,44 @@ def pagina_confirmacao(numero_os):
         if not dados:
             return
             
+        # Verificar se já teve saída
+        if dados.get("STATUS") == "SAIDA":
+            data_saida = dados['DATA'] if dados['DATA'] else 'data não registrada'
+            confirmador = dados['CONFIRMADOR'] if dados['CONFIRMADOR'] else 'usuário desconhecido'
+            st.error(f"⚠️ ATENÇÃO: OS {numero_os} já teve saída confirmada!")
+            st.write(f"**Data/Hora:** {data_saida}")
+            st.write(f"**Confirmado por:** {confirmador}")
+            st.write("---")
+            if st.button("↩️ Voltar para o Início"):
+                st.query_params.clear()
+            return
+            
         st.title(f"✅ Confirmação de Saída - OS {numero_os}")
         st.write(f"**Produto:** {dados['NOME']}")
         
         with st.form(key='confirmar_saida'):
-            nome_confirmador = st.text_input("👤 Seu nome para confirmação")
+            nome_confirmador = st.text_input("👤 Seu nome para confirmação", placeholder="Digite seu nome completo")
             
-            if st.form_submit_button("Confirmar Saída"):
+            if st.form_submit_button("✔️ Confirmar Saída"):
+                if not nome_confirmador.strip():
+                    st.warning("Por favor, digite seu nome para confirmar!")
+                    return
+                
                 aba = acessar_planilha()
                 if aba:
-                    # Atualização mais robusta
                     updates = [
                         (COLUNAS.index("STATUS") + 1, "SAIDA"),
-                        (COLUNAS.index("CONFIRMADOR") + 1, nome_confirmador),
+                        (COLUNAS.index("CONFIRMADOR") + 1, nome_confirmador.strip()),
                         (COLUNAS.index("DATA") + 1, datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
                     ]
                     
                     for col, value in updates:
                         aba.update_cell(dados['linha'], col, value)
                         
-                    st.success("Saída confirmada com sucesso!")
+                    st.success("✅ Saída confirmada com sucesso!")
                     st.balloons()
-                    st.experimental_rerun()
+                    st.query_params.clear()
+                    st.rerun()
                 else:
                     st.error("Falha na conexão com a planilha!")
     except APIError as e:
@@ -205,9 +221,8 @@ def pagina_detalhes(numero_os):
         st.error(f"Erro ao carregar detalhes: {str(e)}")
 
 # Controle de navegação principal
-query_params = st.experimental_get_query_params()
-if "os" in query_params:
-    numero_os = unquote(query_params["os"][0])
+if "os" in st.query_params:
+    numero_os = unquote(st.query_params.get("os", [""])[0])  # Formato novo
     if numero_os:
         dados = buscar_dados_os(numero_os)
         if dados:
@@ -222,8 +237,3 @@ if "os" in query_params:
 else:
     pagina_principal()
 
-# Limpeza de arquivos temporários
-if os.path.exists("temp_qrcodes"):
-    for file in os.listdir("temp_qrcodes"):
-        if file.endswith(".png"):
-            os.remove(os.path.join("temp_qrcodes", file))
