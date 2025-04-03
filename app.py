@@ -28,6 +28,10 @@ COLUNAS = [
     "DATA", "VALOR", "QTD. CHAPA", "C", "M", "Y", "K", "P", "TIPO DE IMP.", "CONFIRMADOR", "DATA DA CONFIRMAÇÃO"
 ]
 
+FUSO_BRASILIA = pytz.timezone("America/Sao_Paulo")
+
+
+
 def acessar_planilha():
     try:
         planilha = CLIENTE.open_by_key(ID_PLANILHA)
